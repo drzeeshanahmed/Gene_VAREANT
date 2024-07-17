@@ -1,0 +1,8 @@
+venv/
+ensembl-vep/
+snpEff/
+vep-cache/
+databases/
+datasets/
+results/
+__pycache__/
