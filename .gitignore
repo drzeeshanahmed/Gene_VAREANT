@@ -6,3 +6,4 @@ databases/
 datasets/
 results/
 __pycache__/
+.DS_Store
