@@ -1,4 +1,4 @@
-# Gene_VAMP
+# Gene_VAREANT
 
 ## Setup
 
@@ -13,7 +13,7 @@ java --version # >= 11
 First clone this repository using git:
 
 ```bash
-git clone https://github.com/drzeeshanahmed/Gene_VAMP
+git clone https://github.com/drzeeshanahmed/Gene_VAREANT
 ```
 
 OPTIONAL: Set up a virtual environment to install all python dependencies. Note that
