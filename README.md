@@ -1,4 +1,4 @@
-# VCF Pre-processing Tool
+# Gene_VAMP
 
 ## Setup
 
@@ -13,7 +13,7 @@ java --version # >= 11
 First clone this repository using git:
 
 ```bash
-git clone $REPO_URL
+git clone https://github.com/drzeeshanahmed/Gene_VAMP
 ```
 
 OPTIONAL: Set up a virtual environment to install all python dependencies. Note that
