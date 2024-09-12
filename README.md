@@ -88,3 +88,10 @@ python main.py all --input {INPUT_VCF} --output {OUTPUT_DIR} --config {CONFIG_FI
 ```
 
 Refer to previous commands for a description of each flag.
+
+
+## Sample Dataset
+
+The `tests/` folder contains a sample `dataset.vcf` file with 10000 variants and a sample `params.config.ig` configuration file.
+The `results/` folder contains the outcomes of running VAREANT on the dataset using the sample configuration file. The annotation databases
+are not included in this GitHub due to storage reasons, and must be downloaded separately from the links above.
