@@ -1,9 +1,6 @@
 venv/
 ensembl-vep/
-snpEff/
 vep-cache/
-databases/
-datasets/
-results/
+hidden/
 __pycache__/
 .DS_Store

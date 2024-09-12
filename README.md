@@ -38,16 +38,16 @@ as well as any of the supported annotation databases. To install these, please r
 to their documentations. As the annotation databases can be quite large (tens of GB), please
 install only those which you require.
 
-1. SnpSift can be downloaded here: https://snpeff.blob.core.windows.net/versions/snpEff_latest_core.zip
+1. SnpSift can be downloaded here: https://snpeff.blob.core.windows.net/versions/snpEff_latest_core.zip (A copy is included in this repository)
 1. ClinVar and its index file can be downloaded at https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/
 1. dbSNP and its index file can be downloaded from https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/
-1. dbnsfp and its index file can be downloaded following the instructions at https://pcingola.github.io/SnpEff/snpsift/dbnsfp/
+1. dbNSFP and its index file can be downloaded following the instructions at https://pcingola.github.io/SnpEff/snpsift/dbnsfp/
 
 ## Pipeline
 
 The main.py file contains all the utilities to execute the analysis
 
-### Truncation
+### Pre-Processing
 
 ```bash
 python main.py truncate --input {INPUT_VCF} --output {OUTPUT_DIR} --config {CONFIG_FILE}
@@ -70,7 +70,7 @@ Note that for each of `DBSNP_PATH`, `DBNSFP_PATH`, and `CLINVAR_PATH`, those fla
 If included, a corresponding tabix-indexed file with the same basename (`{*}.tbi`) must exist in the same directory. Please refer
 to the SnpSift documentation for this.
 
-### Extraction
+### AI/ML-Ready Data Preparation
 
 ```bash
 python main.py extract --input {INPUT_VCF} --output {OUTPUT_DIR}
