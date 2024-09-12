@@ -6,8 +6,8 @@ This pipeline requires git, Python, and Java. Please verify that they are instal
 
 ```bash
 git --version
-python --version # >= 2.7
-java --version # >= 11
+python --version # >= 3.6
+java --version # >= 8
 ```
 
 First clone this repository using git:
@@ -16,9 +16,7 @@ First clone this repository using git:
 git clone https://github.com/drzeeshanahmed/Gene_VAREANT
 ```
 
-OPTIONAL: Set up a virtual environment to install all python dependencies. Note that
-the `venv` may not exist for earlier version of python (before 3.6). If this is the case, you
-can skip this step of creating a virtual environment.
+OPTIONAL: Set up a virtual environment to install all python dependencies.
 
 ```bash
 python -m venv venv
