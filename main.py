@@ -1,6 +1,9 @@
+import traceback
+import sys
 import argparse
 import os
 from datetime import datetime
+from log import print_text
 from truncate import main as truncate_pipeline
 from annotate import main as annotate_pipeline
 from extract import main as extract_pipeline
@@ -59,6 +62,11 @@ if __name__ == "__main__":
 
     # Extract
     extract.add_argument(
+        "--config",
+        required=True,
+        help="Configuration rulesets for how to truncate the input VCF.",
+    )
+    extract.add_argument(
         "--input", required=True, help="Input VCF that gets extracted into DB and CIGT."
     )
     extract.add_argument(
@@ -108,21 +116,67 @@ if __name__ == "__main__":
         args.output = os.path.join(
             args.output, datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         )
+
+    log_path = os.path.join(args.output, "log.txt")
     os.mkdir(args.output)
 
-    if args.command == "truncate":
-        truncate_pipeline(args.config, args.input, args.output, args.preserve_meta)
-    elif args.command == "annotate":
-        annotate_pipeline(
-            args.input, args.output, args.snpsift, args.dbsnp, args.dbnsfp, args.clinvar
-        )
-    elif args.command == "extract":
-        extract_pipeline(args.input, args.output)
-    elif args.command == "all":
-        input = truncate_pipeline(
-            args.config, args.input, args.output, args.preserve_meta
-        )
-        input = annotate_pipeline(
-            input, args.output, args.snpsift, args.dbsnp, args.dbnsfp, args.clinvar
-        )
-        extract_pipeline(input, args.output)
+    log_file = open(log_path, "a")
+
+    print_text(log_file, "Starting VAREANT with " + " ".join(sys.argv))
+
+    try:
+        if args.command == "truncate":
+            truncate_pipeline(
+                args.config,
+                args.input,
+                args.output,
+                args.preserve_meta,
+                log_file,
+            )
+        elif args.command == "annotate":
+            annotate_pipeline(
+                args.input,
+                args.output,
+                args.snpsift,
+                args.dbsnp,
+                args.dbnsfp,
+                args.clinvar,
+                log_file,
+            )
+        elif args.command == "extract":
+            extract_pipeline(
+                args.config,
+                args.input,
+                args.output,
+                log_file,
+            )
+        elif args.command == "all":
+            input = truncate_pipeline(
+                args.config,
+                args.input,
+                args.output,
+                args.preserve_meta,
+                log_file,
+            )
+            input = annotate_pipeline(
+                input,
+                args.output,
+                args.snpsift,
+                args.dbsnp,
+                args.dbnsfp,
+                args.clinvar,
+                log_file,
+            )
+            extract_pipeline(
+                args.config,
+                input,
+                args.output,
+                log_file,
+            )
+    except Exception as e:
+        print_text(log_file, "Execution failed with Exception:")
+        print_text(log_file, "".join(traceback.format_exception(e)))
+
+    print_text(log_file, "Finished VAREANT")
+    log_file.flush()
+    log_file.close()

@@ -3,6 +3,10 @@ import sqlite3
 import pandas as pd
 import re
 import warnings
+import io
+import pysam
+
+from log import print_text
 
 warnings.filterwarnings("ignore")
 
@@ -78,9 +82,7 @@ cols: list[str] = []
 
 class Variant:
     def __init__(
-        self,
-        cols: list[str],
-        tokens: list[str],
+        self, cols: list[str], tokens: list[str], extraction_value: str | None
     ):
         # If VCF is missing format column, add the format columns
         if len(cols) == 8:
@@ -91,11 +93,19 @@ class Variant:
             [chrom, pos, id, ref, alt, qual, filter, info, format, *samples] = tokens
 
         self.chrom = chrom
-        self.pos = int(pos)
+        try:
+            self.pos = int(pos)
+        except Exception:
+            self.pos = None
+
         self.id = id
         self.ref = ref
         self.alt = alt
-        self.qual = float(qual)
+        try:
+            self.qual = float(qual)
+        except Exception:
+            self.qual = None
+
         self.filter = None if filter == "PASS" else filter
         self.gene_symbol = None
 
@@ -107,9 +117,17 @@ class Variant:
             elif len(split) == 2:
                 self.info[split[0]] = split[1]
 
-        self.format = format
+        self.format = format.split(":")
         self.samples = [None if s.startswith("./.") else s for s in samples]
-        self.presences = [s is not None for s in self.samples]
+        if extraction_value not in self.format:
+            # binary matrix
+            self.values = [int(s is not None) for s in self.samples]
+        else:
+            value_index = self.format.index(extraction_value)
+            self.values = [
+                s.split(":")[value_index] if s is not None else None
+                for s in self.samples
+            ]
 
     def __str__(self) -> str:
         return f"""VARIANT:
@@ -123,18 +141,44 @@ class Variant:
     INFO({self.info});
     FORMAT({self.format});
     Samples({self.samples});
-    Presences({self.presences});"""
+    Values({self.values});"""
 
 
 variants: list[Variant] = []
 
 
-def main(input_path, output_path):
-    print("Extracting VCF...")
+def main(config_path, input_path, output_path, log_file):
+    print_text(log_file, "Extracting VCF")
+    extract_unidentified_variants = True
+    extraction_value = None
+    print_text(log_file, "Reading from configuration " + config_path)
+    with open(config_path, "r") as config_file:
+        for line in config_file:
+            print_text(log_file, line)
+            if line.startswith("Extract-Unidentified-Variants: False"):
+                extract_unidentified_variants = False
+            if line.startswith("Extract-Genotype-Value: "):
+                extraction_value = line[len("Extract-Genotype-Value: ") :].strip()
+
     db = os.path.join(output_path, "variant_db.sqlite")
     cigt_path = os.path.join(output_path, "cigt_matrix.cigt.csv")
 
-    with open(input_path, "r") as f:
+    print_text(log_file, "Saving SQLite to " + db)
+    print_text(log_file, "Saving CIGT to " + cigt_path)
+
+    print_text(log_file, "Reading input VCF at " + input_path)
+    if not (input_path.endswith(".vcf.gz") or input_path.endswith(".vcf")):
+        raise ValueError(
+            "Must provide a compressed (.vcf.gz) or uncompressed (.vcf) input file."
+        )
+
+    count = 0
+
+    with (
+        io.TextIOWrapper(pysam.BGZFile(input_path, "r"), "utf-8")
+        if input_path.endswith(".vcf.gz")
+        else open(input_path, "r")
+    ) as f:
         while line := f.readline():
             line = line.strip()  # remove new line characters
 
@@ -155,23 +199,38 @@ def main(input_path, output_path):
                     if m is not None:
                         cols[i] = m.group(1)
             else:  # variant entries
-                variants.append(Variant(cols, line.split("\t")))
+                var = Variant(cols, line.split("\t"), extraction_value)
+                if var.id != "." or extract_unidentified_variants:
+                    variants.append(var)
+
+                count += 1
+                if count % 5000 == 0:
+                    print_text(log_file, "# variants read: " + str(count))
+
+    print_text(log_file, "# variants read: " + str(count))
+
+    print_text(log_file, "Opening DB connection")
 
     sq = sqlite3.connect(db)
     cur = sq.cursor()
 
     info_columns = []
+    print_text(log_file, "Preparing INFO headers")
     for info in infos:
         info_columns.append(f"WESI_{info.id} {info.type.upper()}")
         info_columns.append(f"WESI_{info.id}_Description TEXT")
 
     sample_columns = []
+    print_text(log_file, "Preparing FORMAT definitions")
     for f in formats:
         sample_columns.append(f"WESS_{f.id} TEXT")
         sample_columns.append(f"WESS_{f.id}_Description TEXT")
 
+    print_text(log_file, "Creating WES_VARIANT table")
     cur.execute("DROP TABLE IF EXISTS WES_VARIANT;")
+    print_text(log_file, "Creating WES_SAMPLE table")
     cur.execute("DROP TABLE IF EXISTS WES_SAMPLE;")
+    print_text(log_file, "Creating WES_INFO table")
     cur.execute("DROP TABLE IF EXISTS WES_INFO;")
 
     cur.execute("""
@@ -205,6 +264,20 @@ def main(input_path, output_path):
 
     filter_desc_map = {f.id: f.description for f in filters}
     format_desc_map = {f.id: f.description for f in formats}
+
+    print_text(
+        log_file, "Inserting variant data (chrom, pos, id, ref, alt, qual, filter)"
+    )
+    print_text(
+        log_file,
+        f"Inserting sample data (variant_id, {', '.join([f.id for f in formats])})",
+    )
+    print_text(
+        log_file,
+        f"Inserting info annotations (variant_id, {', '.join([i.id for i in infos])})",
+    )
+    print_text(log_file, f"Processing {len(variants)} total variants")
+    count = 0
     for i, v in enumerate(variants):
         index = i + 1
         filter_desc = (
@@ -234,7 +307,7 @@ def main(input_path, output_path):
                 continue
 
             entries = [None, index]
-            mapping = {k: s for k, s in zip(v.format.split(":"), sample.split(":"))}
+            mapping = {k: s for k, s in zip(v.format, sample.split(":"))}
             for k in formats:
                 entries.append(mapping.get(k.id))
                 entries.append(k.description)
@@ -246,14 +319,22 @@ def main(input_path, output_path):
             sample_entries,
         )
 
+        count += 1
+        if count % 5000 == 0:
+            print_text(log_file, "# variants finished: " + str(count))
+
+    print_text(log_file, "# variants finished: " + str(count))
+    print_text(log_file, "Closing DB connection")
     sq.commit()
     sq.close()
 
+    print_text(log_file, "Creating DataFrame")
     # CIGT
-    df = pd.DataFrame([v.presences for v in variants], dtype="int64")
+    df = pd.DataFrame([v.values for v in variants])
     df.columns = cols[9:]
     df.index = [v.id for v in variants]
 
+    print_text(log_file, "Saving CIGT DataFrame")
     df.transpose().to_csv(cigt_path, index=True, index_label="SID")
 
-    print("Finished Extracting VCF")
+    print_text(log_file, "Finished Extracting VCF")

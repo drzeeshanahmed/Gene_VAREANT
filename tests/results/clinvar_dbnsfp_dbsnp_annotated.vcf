@@ -250,9 +250,8 @@
 ##INFO=<ID=ClinVar_CLNREVSTAT,Number=.,Type=String,Description="CLNREVSTAT field from [PATH]/clinvar.vcf.gz">
 ##INFO=<ID=ClinVar_CLNDN,Number=.,Type=String,Description="CLNDN field from [PATH]/clinvar.vcf.gz">
 ##VEP-command-line='vep --af_gnomad --assembly GRCh38 --cache --custom [PATH]/clinvar.vcf.gz,ClinVar,vcf,exact,0,CLNSIG,CLNREVSTAT,CLNDN --database 0 --dir_cache [PATH]/Ensembl-VEP_cache --dir_plugins [PATH]/Plugins --input_file CVD-SNPs_VEP_filtered.vcf.gz --offline --output_file CVD-SNPs_VEP_annotated.vcf --plugin [PATH]/whole_genome_SNVs.tsv.gz --vcf'
-##IntelliGenes-Truncate-VCF='main.py all --input tests/dataset.vcf --output tests/results --config tests/params.config.ig --snpsift snpEff/SnpSift.jar --dbsnp hidden/databases/dbSnp.vcf.gz --dbnsfp hidden/databases/dbNSFP4.1a.txt.gz --clinvar hidden/databases/clinvar.vcf.gz'
 ##SnpSiftVersion="SnpSift 5.2c (build 2024-04-09 12:24), by Pablo Cingolani"
-##SnpSiftCmd="SnpSift Annotate hidden/databases/dbSnp.vcf.gz tests/results/truncated.vcf"
+##SnpSiftCmd="SnpSift Annotate -id hidden/databases/dbSnp.vcf.gz tests/dataset.vcf"
 ##INFO=<ID=CDA,Number=0,Type=Flag,Description="Variation is interrogated in a clinical diagnostic assay">
 ##INFO=<ID=OTH,Number=0,Type=Flag,Description="Has other variant with exactly the same set of mapped positions on NCBI refernce assembly.">
 ##INFO=<ID=S3D,Number=0,Type=Flag,Description="Has 3D structure - SNP3D table">
@@ -301,6 +300,8 @@
 ##INFO=<ID=RSPOS,Number=1,Type=Integer,Description="Chr position reported in dbSNP">
 ##INFO=<ID=HD,Number=0,Type=Flag,Description="Marker is on high density genotyping kit (50K density or greater).  The variant may have phenotype associations present in dbGaP.">
 ##INFO=<ID=PM,Number=0,Type=Flag,Description="Variant is Precious(Clinical,Pubmed Cited)">
+##IntelliGenes-Truncate-VCF='main.py all --input tests/dataset.vcf --output tests/results --config tests/params.config.ig --preserve-meta --snpsift snpEff/SnpSift.jar --dbsnp hidden/databases/dbSnp.vcf.gz --dbnsfp hidden/databases/dbNSFP4.1a.txt.gz --clinvar hidden/databases/clinvar.vcf.gz'
+##SnpSiftCmd="SnpSift Annotate hidden/databases/dbSnp.vcf.gz tests/results/truncated.vcf"
 ##SnpSiftCmd="SnpSift DbNsfp tests/results/dbsnp_annotated.vcf"
 ##INFO=<ID=dbNSFP_ExAC_NFE_AF,Number=A,Type=Float,Description="Field 'ExAC_NFE_AF' from dbNSFP">
 ##INFO=<ID=dbNSFP_ExAC_SAS_AF,Number=A,Type=Float,Description="Field 'ExAC_SAS_AF' from dbNSFP">

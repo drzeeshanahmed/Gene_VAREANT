@@ -2,43 +2,40 @@
 
 ## Setup
 
-This pipeline requires git, Python, and Java. Please verify that they are installed:
+This pipeline requires git, Conda, Python, and Java. Please verify that they are installed:
 
 ```bash
 git --version
 python --version # >= 3.6
 java --version # >= 8
+conda --version
 ```
 
 First clone this repository using git:
 
 ```bash
 git clone https://github.com/drzeeshanahmed/Gene_VAREANT
+cd Gene_VAREANT
 ```
 
-OPTIONAL: Set up a virtual environment to install all python dependencies.
+OPTIONAL: Set up a conda environment to install all python dependencies.
 
 ```bash
-python -m venv venv
-source venv/bin/activate
-```
-
-Install python dependencies:
-
-```bash
-pip install -r requirements.txt
+conda env create -f environment.yml
+conda activate vareant
 ```
 
 ## Third-party dependencies
 
 The annotate phase of this pipeline requires that `SnpSift.jar` is available on system,
 as well as any of the supported annotation databases. To install these, please refer
-to their documentations. As the annotation databases can be quite large (tens of GB), please
-install only those which you require.
+to their documentations (`SnpSift.jar`) is already included within this repository.
+As the annotation databases can be quite large (tens of GB), please install only those
+which you require.
 
 1. SnpSift can be downloaded here: https://snpeff.blob.core.windows.net/versions/snpEff_latest_core.zip (A copy is included in this repository)
 1. ClinVar and its index file can be downloaded at https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/
-1. dbSNP and its index file can be downloaded from https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/
+1. dbSNP and its index file can be downloaded from https://ftp.ncbi.nih.gov/snp/latest_release/VCF/
 1. dbNSFP and its index file can be downloaded following the instructions at https://pcingola.github.io/SnpEff/snpsift/dbnsfp/
 
 ## Pipeline
@@ -66,7 +63,7 @@ resulting annotated VCF file, `SNPSIFT_JAR` with the path the to SnpSift.jar exe
 
 Note that for each of `DBSNP_PATH`, `DBNSFP_PATH`, and `CLINVAR_PATH`, those flags are optional and ignored if omitted.
 If included, a corresponding tabix-indexed file with the same basename (`{*}.tbi`) must exist in the same directory. Please refer
-to the SnpSift documentation for this.
+to the SnpSift documentation for this. At least one of `--dbsnp`, `--dbnsfp`, and `--clinvar` must be provided to perform annotation.
 
 ### AI/ML-Ready Data Preparation
 
@@ -93,3 +90,5 @@ Refer to previous commands for a description of each flag.
 The `tests/` folder contains a sample `dataset.vcf` file with 10000 variants and a sample `params.config.ig` configuration file.
 The `results/` folder contains the outcomes of running VAREANT on the dataset using the sample configuration file. The annotation databases
 are not included in this GitHub due to storage reasons, and must be downloaded separately from the links above.
+
+Note, VAREANT supports both uncompressed and bgzipped vcf files. The file extensions must be `.vcf` or `.vcf.gz` respectively.

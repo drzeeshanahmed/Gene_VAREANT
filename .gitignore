@@ -1,4 +1,5 @@
 venv/
+env/
 ensembl-vep/
 vep-cache/
 hidden/
